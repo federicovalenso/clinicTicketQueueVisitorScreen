@@ -87,10 +87,21 @@ bool TicketModel::removeRows(int, int, const QModelIndex &parent)
 
 void TicketModel::addTicket(const Ticket& ticket)
 {
+    if (data_.size() > 0) {
+        if (data_.back() != ticket) {
+            addRow(ticket);
+            if (data_.size() == 8) {
+                removeRows();
+            }
+        }
+    } else {
+        addRow(ticket);
+    }
+}
+
+void TicketModel::addRow(const Ticket &ticket)
+{
     beginInsertRows(QModelIndex(), data_.size(), data_.size());
     data_.push_back(ticket);
     endInsertRows();
-    if (data_.size() == 8) {
-        removeRows();
-    }
 }

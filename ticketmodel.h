@@ -22,6 +22,7 @@ public:
 
 private:
     std::vector<Ticket> data_;
+    void addRow(const Ticket& ticket);
 };
 
 #endif // TICKETMODEL_H

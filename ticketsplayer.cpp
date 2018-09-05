@@ -11,28 +11,37 @@ TicketsPlayer::TicketsPlayer(QObject *parent)
     player = new QMediaPlayer(this);
     playlist = new QMediaPlaylist(this);
     player->setPlaylist(playlist);
-    connect(player, SIGNAL(stateChanged(QMediaPlayer::State)),
-            this, SLOT(tryToPlay()));
 }
 
 void TicketsPlayer::addTicketToPlaylist(const Ticket &ticket)
 {
-    tickets.push(ticket);
-    tryToPlay();
+    if (tickets.size() > 0) {
+        if (tickets.front() != ticket) {
+            tickets.push(ticket);
+            tryToPlay();
+        }
+    } else {
+        tickets.push(ticket);
+        tryToPlay();
+    }
 }
 
 void TicketsPlayer::tryToPlay()
 {
     if (tickets.size() > 0) {
         if (player->state() != QMediaPlayer::State::PlayingState) {
-            playlist->clear();
-            playlist->addMedia(QUrl(soundResPrefix + "ticket"));
-            for (const auto& token : parseTicketNumber(tickets.front().ticket_number)) {
-                playlist->addMedia(QUrl((soundResPrefix + token)));
+            playlist->addMedia(QUrl(SOUND_RES_PREFIX + TICKET_FILE_NAME));
+            Ticket ticket = tickets.back();
+            for (const auto& token : parseTicketNumber(ticket.ticket_number)) {
+                playlist->addMedia(QUrl(SOUND_RES_PREFIX + token));
             }
+            playlist->addMedia(QUrl(SOUND_RES_PREFIX + WINDOW_FILE_NAME));
+            playlist->addMedia(QUrl(SOUND_RES_PREFIX + QString::number(ticket.window)));
             playlist->setCurrentIndex(0);
             player->play();
-            tickets.pop();
+            if (tickets.size() == MAX_TICKETS) {
+                tickets.pop();
+            }
         }
     }
 }
@@ -41,23 +50,26 @@ vector<QString> TicketsPlayer::parseTicketNumber(const QString& ticket)
 {
     auto digitPos = ticket.indexOf(QRegExp("[1-9]"));
     vector<QString> result;
-    result.push_back(ticket.left(digitPos-1));
-    int number = ticket.right(digitPos).toInt();
-    int hundreds = number / 100;
-    if (hundreds > 0) {
-        result.push_back(QString::number(hundreds * 100));
-    }
-    int minusHundreds = number - hundreds * 100;
-    if (minusHundreds > 10 && minusHundreds < 20) {
-        result.push_back(QString::number(minusHundreds));
-    } else {
-        int tens = minusHundreds / 10;
-        int ones = number % 10;
-        if (tens > 0) {
-            result.push_back(QString::number(tens * 10));
+    QString transLetter = lettersTrans.value(ticket.left(digitPos).toLower());
+    if (transLetter.isEmpty() == false) {
+        result.push_back(std::move(transLetter));
+        int number = ticket.right(digitPos).toInt();
+        int hundreds = number / 100;
+        if (hundreds > 0) {
+            result.push_back(QString::number(hundreds * 100));
         }
-        if (ones > 0) {
-            result.push_back(QString::number(ones));
+        int minusHundreds = number - hundreds * 100;
+        if (minusHundreds > 10 && minusHundreds < 20) {
+            result.push_back(QString::number(minusHundreds));
+        } else {
+            int tens = minusHundreds / 10;
+            int ones = number % 10;
+            if (tens > 0) {
+                result.push_back(QString::number(tens * 10));
+            }
+            if (ones > 0) {
+                result.push_back(QString::number(ones));
+            }
         }
     }
     return result;

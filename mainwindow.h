@@ -30,17 +30,6 @@ private:
     QTimer* ticketsTimer;
     TicketModel* model;
 
-    const std::map<std::string, std::string> lettersTrans = {
-        {"a", "А"},
-        {"b", "Б"},
-        {"v", "В"},
-        {"zh", "Ж"},
-        {"d", "Д"},
-        {"e", "Е"},
-        {"i", "И"},
-        {"k", "К"}
-    };
-
     void updateTicketsTableSizes();
 };
 

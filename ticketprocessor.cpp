@@ -48,6 +48,7 @@ Ticket TicketProcessor::parseTicket(const QByteArray &data)
 void TicketProcessor::replyFinished(QNetworkReply *reply)
 {
     auto error = reply->error();
+    qDebug() << reply->error();
     if (error != QNetworkReply::NetworkError::NoError) {
         emit requestError(tr("Не удалось получить данные с сервера..."));
     } else {

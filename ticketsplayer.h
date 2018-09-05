@@ -3,7 +3,7 @@
 
 #include <queue>
 #include <vector>
-#include <string>
+#include <QMap>
 #include <QString>
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
@@ -23,7 +23,19 @@ private:
     QMediaPlayer *player;
     QMediaPlaylist *playlist;
     std::queue<Ticket> tickets;
-    const QString soundResPrefix = "qrc:/lettersAndNumbers/";
+    const QString SOUND_RES_PREFIX = "qrc:/lettersAndNumbers/";
+    const QString TICKET_FILE_NAME = "ticket";
+    const QString WINDOW_FILE_NAME = "window";
+    const size_t MAX_TICKETS = 8;
+    const QMap<QString, QString> lettersTrans = {
+        {"б", "b"},
+        {"в", "v"},
+        {"д", "d"},
+        {"п", "p"},
+        {"р", "r"},
+        {"с", "s"},
+        {"э", "e"}
+    };
 
     std::vector<QString> parseTicketNumber(const QString &ticket);
 };
