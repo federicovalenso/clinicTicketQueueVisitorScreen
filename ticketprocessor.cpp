@@ -4,8 +4,6 @@
 #include "ticketprocessor.h"
 #include "appsettings.h"
 
-const QString TicketProcessor::ACTION_TICKETS_FREE = "tickets/free";
-
 TicketProcessor::TicketProcessor(QObject *parent) :
     QObject(parent)
 {
@@ -30,6 +28,27 @@ void TicketProcessor::sendGetRequest(const QString& action) const noexcept
     mNetworkManager->get(request);
 }
 
+void TicketProcessor::sendPutRequest(const QUrlQuery &params, const QString &action) const noexcept
+{
+    AppSettings& settings = AppSettings::getInstance();
+    QString address = QString("http://%1:%2/%3")
+            .arg(settings.getServerAddr())
+            .arg(settings.getPort())
+            .arg(action);
+    QUrl url(address);
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    mNetworkManager->put(request, params.toString(QUrl::FullyEncoded).toUtf8());
+}
+
+void TicketProcessor::sendVoiceTicketRequest(const Ticket& ticket) const noexcept
+{
+    QUrlQuery params;
+    params.addQueryItem(ID, QString::number(ticket.id));
+    params.addQueryItem(IS_VOICED, QString::number(1));
+    sendPutRequest(params, ACTION_VOICE_TICKETS);
+}
+
 Ticket TicketProcessor::parseTicket(const QByteArray &data)
 {
     QJsonDocument jsonDoc(QJsonDocument::fromJson(data));
@@ -48,9 +67,9 @@ Ticket TicketProcessor::parseTicket(const QByteArray &data)
 void TicketProcessor::replyFinished(QNetworkReply *reply)
 {
     auto error = reply->error();
-    qDebug() << reply->error();
     if (error != QNetworkReply::NetworkError::NoError) {
         emit requestError(tr("Не удалось получить данные с сервера..."));
+        qWarning() << reply->error();
     } else {
         int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         if (status == 200) {
@@ -59,6 +78,7 @@ void TicketProcessor::replyFinished(QNetworkReply *reply)
                 Ticket ticket(parseTicket(reply->readAll()));
                 if (ticket.isValid()) {
                     emit receivedTicket(ticket);
+                    sendVoiceTicketRequest(ticket);
                 } else {
                     emit requestError(tr("Квитанция получена в некорректном формате"));
                 }

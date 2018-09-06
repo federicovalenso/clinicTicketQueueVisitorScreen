@@ -31,42 +31,6 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QLabel" name="lblTicket">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>50</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>220</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>220</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">QLabel
-{
-	font: 75 48pt &quot;MS Shell Dlg 2&quot;;
-	color: rgb(255, 159, 67);
-	background-color: white;
-}</string>
-      </property>
-      <property name="text">
-       <string>ТАЛОН</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item>
      <widget class="QTableView" name="tvTickets">
       <property name="enabled">
        <bool>false</bool>
@@ -94,8 +58,11 @@
 	border-right: 0px; 
 }</string>
       </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
       <property name="autoScroll">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
       <property name="editTriggers">
        <set>QAbstractItemView::NoEditTriggers</set>

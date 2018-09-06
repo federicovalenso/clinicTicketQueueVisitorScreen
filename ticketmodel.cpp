@@ -90,7 +90,7 @@ void TicketModel::addTicket(const Ticket& ticket)
     if (data_.size() > 0) {
         if (data_.back() != ticket) {
             addRow(ticket);
-            if (data_.size() == 8) {
+            if (data_.size() > MAX_TICKETS) {
                 removeRows();
             }
         }

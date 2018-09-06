@@ -21,6 +21,7 @@ public:
     void addTicket(const Ticket &ticket);
 
 private:
+    const size_t MAX_TICKETS = 8;
     std::vector<Ticket> data_;
     void addRow(const Ticket& ticket);
 };

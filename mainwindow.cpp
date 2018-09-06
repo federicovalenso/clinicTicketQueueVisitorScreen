@@ -1,5 +1,7 @@
+#include <vector>
 #include <QTimer>
 #include <QJsonObject>
+#include <QMessageBox>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -21,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
             {
                 player->addTicketToPlaylist(ticket);
                 model->addTicket(ticket);
+                this->updateTicketsTableSizes();
             });
     ticketsTimer = new QTimer(this);
     connect(ticketsTimer,

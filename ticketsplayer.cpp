@@ -11,6 +11,16 @@ TicketsPlayer::TicketsPlayer(QObject *parent)
     player = new QMediaPlayer(this);
     playlist = new QMediaPlaylist(this);
     player->setPlaylist(playlist);
+    connect(player,
+            &QMediaPlayer::stateChanged,
+            this,
+            [=](QMediaPlayer::State newState)
+            {
+                if (newState == QMediaPlayer::State::StoppedState) {
+                    this->playlist->clear();
+                    qDebug() << "playlist's been cleared";
+                }
+            });
 }
 
 void TicketsPlayer::addTicketToPlaylist(const Ticket &ticket)
@@ -29,19 +39,18 @@ void TicketsPlayer::addTicketToPlaylist(const Ticket &ticket)
 void TicketsPlayer::tryToPlay()
 {
     if (tickets.size() > 0) {
+        playlist->addMedia(QUrl(SOUND_RES_PREFIX + TICKET_FILE_NAME));
+        Ticket ticket = tickets.back();
+        for (const auto& token : parseTicketNumber(ticket.ticket_number)) {
+            playlist->addMedia(QUrl(SOUND_RES_PREFIX + token));
+        }
+        playlist->addMedia(QUrl(SOUND_RES_PREFIX + WINDOW_FILE_NAME));
+        playlist->addMedia(QUrl(SOUND_RES_PREFIX + QString::number(ticket.window)));
         if (player->state() != QMediaPlayer::State::PlayingState) {
-            playlist->addMedia(QUrl(SOUND_RES_PREFIX + TICKET_FILE_NAME));
-            Ticket ticket = tickets.back();
-            for (const auto& token : parseTicketNumber(ticket.ticket_number)) {
-                playlist->addMedia(QUrl(SOUND_RES_PREFIX + token));
-            }
-            playlist->addMedia(QUrl(SOUND_RES_PREFIX + WINDOW_FILE_NAME));
-            playlist->addMedia(QUrl(SOUND_RES_PREFIX + QString::number(ticket.window)));
-            playlist->setCurrentIndex(0);
             player->play();
-            if (tickets.size() == MAX_TICKETS) {
-                tickets.pop();
-            }
+        }
+        if (tickets.size() == MAX_TICKETS) {
+            tickets.pop();
         }
     }
 }
