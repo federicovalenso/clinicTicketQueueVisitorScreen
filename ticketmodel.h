@@ -31,6 +31,7 @@ private:
     const std::vector<Ticket>::size_type MAX_TICKETS = 4;
     std::vector<Ticket> data_;
     void addRow(const Ticket& ticket);
+    void removeRepetitiveTickets(const Ticket& ticket);
 };
 
 #endif // TICKETMODEL_H

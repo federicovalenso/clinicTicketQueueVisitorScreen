@@ -10,6 +10,7 @@ Window {
     height: Screen.desktopAvailableHeight
     title: qsTr("Талоны")
     visibility: "FullScreen"
+    color: "black"
 
     Transition {
         id: addTransition

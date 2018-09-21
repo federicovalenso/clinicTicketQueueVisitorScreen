@@ -85,6 +85,7 @@ void TicketModel::addTicket(const Ticket& ticket)
 {
     if (data_.size() > 0) {
         if (std::find(data_.begin(), data_.end(), ticket) == data_.end()) {
+            removeRepetitiveTickets(ticket);
             addRow(ticket);
             if (data_.size() > MAX_TICKETS) {
                 removeRows();
@@ -100,4 +101,22 @@ void TicketModel::addRow(const Ticket &ticket)
     beginInsertRows(QModelIndex(), data_.size(), data_.size());
     data_.push_back(ticket);
     endInsertRows();
+}
+
+void TicketModel::removeRepetitiveTickets(const Ticket &ticket)
+{
+    if (data_.size() > 0) {
+        beginRemoveRows(QModelIndex(), 0, 0);
+        data_.erase(
+                    std::remove_if(
+                        data_.begin(),
+                        data_.end(),
+                        [=] (const Ticket& cur_ticket)
+                        {
+                            return cur_ticket.ticket_number == ticket.ticket_number || cur_ticket.window == ticket.window;
+                        }),
+                    data_.end()
+                    );
+        endRemoveRows();
+    }
 }
