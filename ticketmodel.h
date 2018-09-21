@@ -18,10 +18,17 @@ public:
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const override;
     virtual bool removeRows(int row = 0, int count = 1, const QModelIndex &parent = QModelIndex()) override;
+    virtual QHash<int, QByteArray> roleNames() const override;
     void addTicket(const Ticket &ticket);
 
+    enum Roles
+    {
+        TICKET_NUMBER = Qt::ItemDataRole::UserRole + 1,
+        WINDOW
+    };
+
 private:
-    const size_t MAX_TICKETS = 8;
+    const std::vector<Ticket>::size_type MAX_TICKETS = 4;
     std::vector<Ticket> data_;
     void addRow(const Ticket& ticket);
 };

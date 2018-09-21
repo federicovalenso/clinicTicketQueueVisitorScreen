@@ -26,7 +26,7 @@ private:
     const QString SOUND_RES_PREFIX = "qrc:/lettersAndNumbers/";
     const QString TICKET_FILE_NAME = "ticket";
     const QString WINDOW_FILE_NAME = "window";
-    const size_t MAX_TICKETS = 8;
+    const size_t MAX_TICKETS = 4;
     const QMap<QString, QString> lettersTrans = {
         {"б", "b"},
         {"в", "v"},

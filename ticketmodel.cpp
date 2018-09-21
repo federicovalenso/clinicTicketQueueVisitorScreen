@@ -1,4 +1,5 @@
 #include <utility>
+#include <algorithm>
 #include <QColor>
 #include "ticketmodel.h"
 
@@ -18,27 +19,14 @@ int TicketModel::columnCount(const QModelIndex&) const
 
 QVariant TicketModel::data(const QModelIndex &index, int role) const
 {
-    if (role == Qt::DisplayRole) {
-        if (index.column() == 0) {
-            return data_.at(index.row()).ticket_number;
-        } else if (index.column() == 1) {
-            return data_.at(index.row()).window;
-        }
-    } else if (role == Qt::TextAlignmentRole) {
-        return Qt::AlignCenter;
-    } else if (role == Qt::TextColorRole) {
-        return QColor(52, 31, 151);
-    } else if (role == Qt::BackgroundRole) {
-        QColor color;
-        if (index.row() % 2 == 0) {
-            color.setRgb(72, 219, 251);
-        } else {
-            color.setRgb(0, 210, 211);
-        }
-        color.setAlpha(70);
-        return color;
+    QVariant result;
+    if (role == Roles::TICKET_NUMBER) {
+        result = data_.at(index.row()).ticket_number;
     }
-    return QVariant();
+    else if (role == Roles::WINDOW) {
+        result = data_.at(index.row()).window;
+    }
+    return result;
 }
 
 QVariant TicketModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -85,10 +73,18 @@ bool TicketModel::removeRows(int, int, const QModelIndex &parent)
     return false;
 }
 
+QHash<int, QByteArray> TicketModel::roleNames() const
+{
+    return {
+        {static_cast<int>(Roles::TICKET_NUMBER), "number"},
+        {static_cast<int>(Roles::WINDOW), "window"}
+    };
+}
+
 void TicketModel::addTicket(const Ticket& ticket)
 {
     if (data_.size() > 0) {
-        if (data_.back() != ticket) {
+        if (std::find(data_.begin(), data_.end(), ticket) == data_.end()) {
             addRow(ticket);
             if (data_.size() > MAX_TICKETS) {
                 removeRows();

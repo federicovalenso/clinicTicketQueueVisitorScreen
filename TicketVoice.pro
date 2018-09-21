@@ -1,6 +1,6 @@
-QT += core gui widgets multimedia
+QT += core gui multimedia quick svg
 
-QMAKE_CXXFLAGS += -O0
+QMAKE_CXXFLAGS += -O2
 CONFIG += c++11
 
 TARGET = TicketVoice
@@ -20,23 +20,24 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
     ticketsplayer.cpp \
-    mainwindow.cpp \
     ticketmodel.cpp \
     ticketprocessor.cpp \
     appsettings.cpp
 
 RESOURCES += \
-    sounds.qrc
+    sounds.qrc \
+    gui.qrc
 
 HEADERS += \
     ticketsplayer.h \
-    mainwindow.h \
     ticketmodel.h \
     ticket.h \
     ticketprocessor.h \
     appsettings.h
 
-FORMS += \
-    mainwindow.ui
+win32:RC_ICONS += icon.ico
 
-DISTFILES +=
+DISTFILES += \
+    android-sources/AndroidManifest.xml
+
+ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android-sources

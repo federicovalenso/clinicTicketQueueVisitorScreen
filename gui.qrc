@@ -1,0 +1,8 @@
+<RCC>
+    <qresource lang="ru" prefix="/views">
+        <file>ticketsView.qml</file>
+    </qresource>
+    <qresource lang="ru" prefix="/img">
+        <file>mdcLogo.svg</file>
+    </qresource>
+</RCC>

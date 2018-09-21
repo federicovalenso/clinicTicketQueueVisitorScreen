@@ -80,7 +80,7 @@ void TicketProcessor::replyFinished(QNetworkReply *reply)
                     emit receivedTicket(ticket);
                     sendVoiceTicketRequest(ticket);
                 } else {
-                    emit requestError(tr("Квитанция получена в некорректном формате"));
+                    emit requestError(tr("Отсутствуют неозвученные талоны"));
                 }
             }
         }
