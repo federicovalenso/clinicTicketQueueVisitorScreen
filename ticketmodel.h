@@ -2,8 +2,9 @@
 #define TICKETMODEL_H
 
 #include <QAbstractTableModel>
-#include <vector>
+#include <QVector>
 #include <QString>
+#include <QMutex>
 #include "ticket.h"
 
 class TicketModel : public QAbstractTableModel
@@ -28,9 +29,11 @@ public:
     };
 
 private:
-    const std::vector<Ticket>::size_type MAX_TICKETS = 4;
-    std::vector<Ticket> data_;
+    const QVector<Ticket>::size_type MAX_TICKETS = 4;
+    QVector<Ticket> data_;
+    QMutex mutex_;
     void addRow(const Ticket& ticket);
+    QVector<Ticket>::Iterator findRepetitiveTicket(const Ticket& ticket);
     void removeRepetitiveTickets(const Ticket& ticket);
 };
 

@@ -1,6 +1,7 @@
 #include <utility>
 #include <algorithm>
 #include <QColor>
+#include <QMutexLocker>
 #include "ticketmodel.h"
 
 TicketModel::TicketModel(QObject *parent)
@@ -62,11 +63,17 @@ Qt::ItemFlags TicketModel::flags(const QModelIndex &index) const
     return Qt::ItemIsEditable | QAbstractTableModel::flags(index);
 }
 
-bool TicketModel::removeRows(int, int, const QModelIndex &parent)
+bool TicketModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     if (data_.size() > 0) {
-        beginRemoveRows(parent, 0, 0);
-        data_.erase(data_.begin());
+        auto last = row + count - 1;
+        beginRemoveRows(parent, row, last);
+        QMutexLocker locker(&mutex_);
+        if (count == 1) {
+            data_.erase(data_.begin() + row);
+        } else if (count > 1) {
+            data_.erase(data_.begin() + row, data_.begin() + last);
+        }
         endRemoveRows();
         return true;
     }
@@ -103,20 +110,22 @@ void TicketModel::addRow(const Ticket &ticket)
     endInsertRows();
 }
 
+QVector<Ticket>::Iterator TicketModel::findRepetitiveTicket(const Ticket &ticket)
+{
+    return std::find_if(
+                data_.begin(),
+                data_.end(),
+                [=] (const Ticket& cur_ticket)
+                {
+                    return cur_ticket.ticket_number == ticket.ticket_number || cur_ticket.window == ticket.window;
+                });
+}
+
 void TicketModel::removeRepetitiveTickets(const Ticket &ticket)
 {
-    if (data_.size() > 0) {
-        beginRemoveRows(QModelIndex(), 0, 0);
-        data_.erase(
-                    std::remove_if(
-                        data_.begin(),
-                        data_.end(),
-                        [=] (const Ticket& cur_ticket)
-                        {
-                            return cur_ticket.ticket_number == ticket.ticket_number || cur_ticket.window == ticket.window;
-                        }),
-                    data_.end()
-                    );
-        endRemoveRows();
+    auto find_ticket_it = findRepetitiveTicket(ticket);
+    while (find_ticket_it != data_.end()) {
+        removeRows(find_ticket_it - data_.begin());
+        find_ticket_it = findRepetitiveTicket(ticket);
     }
 }
