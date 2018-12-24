@@ -9,8 +9,11 @@ Window {
     width: Screen.desktopAvailableWidth
     height: Screen.desktopAvailableHeight
     title: qsTr("Талоны")
-    visibility: "FullScreen"
     color: "black"
+    visibility: Window.FullScreen
+    onActiveChanged: {
+        ticketsWindow.visibility = activeFocusItem ? Window.FullScreen : Window.Minimized;
+    }
 
     Transition {
         id: addTransition
@@ -145,7 +148,7 @@ Window {
 
     ListView {
         id: lwTickets
-        width: parent.width
+        width: ticketsWindow.width
         height: ticketsWindow.height
         flickableDirection: Flickable.AutoFlickDirection
         header: lwHeader
