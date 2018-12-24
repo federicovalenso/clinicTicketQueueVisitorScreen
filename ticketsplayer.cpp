@@ -26,6 +26,7 @@ TicketsPlayer::TicketsPlayer(QObject *parent)
 
 void TicketsPlayer::addTicketToPlaylist(const Ticket &ticket)
 {
+    QMutexLocker locker(&mutex);
     if (tickets.size() > 0) {
         if (tickets.front() != ticket) {
             tickets.push(ticket);
@@ -45,7 +46,6 @@ QMediaPlayer::State TicketsPlayer::state() const
 void TicketsPlayer::tryToPlay()
 {
     if (tickets.size() > 0) {
-        QMutexLocker locker(&mutex);
         playlist->addMedia(QUrl(SOUND_RES_PREFIX + TICKET_FILE_NAME));
         Ticket ticket = tickets.back();
         for (const auto& token : TicketNumberParser::parse(ticket.ticket_number)) {
