@@ -37,6 +37,10 @@ HEADERS += \
     appsettings.h \
     ticketnumberparser.h
 
+android {
+    QT += androidextras
+}
+
 win32:RC_ICONS += icon.ico
 
 DISTFILES += \

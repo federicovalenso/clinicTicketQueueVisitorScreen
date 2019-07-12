@@ -1,54 +1,99 @@
 #include <QGuiApplication>
+#include <QMediaPlayer>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QMediaPlayer>
 #include <QTimer>
 
+#ifdef Q_OS_ANDROID
+#include <QAndroidJniEnvironment>
+#include <QAndroidJniObject>
+#include <QtAndroid>
+#endif
+
+#include "appsettings.h"
 #include "ticket.h"
 #include "ticketmodel.h"
-#include "ticketsplayer.h"
 #include "ticketprocessor.h"
+#include "ticketsplayer.h"
 
-using namespace  std;
+#ifdef Q_OS_ANDROID
+void keep_screen_on(bool on) {
+  QtAndroid::runOnAndroidThread([on] {
+    QAndroidJniObject activity = QtAndroid::androidActivity();
+    if (activity.isValid()) {
+      QAndroidJniObject window =
+          activity.callObjectMethod("getWindow", "()Landroid/view/Window;");
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    QGuiApplication app(argc, argv);
-    app.setOrganizationName("MANO \'MDC\'");
-    app.setApplicationName("Mano \'MDC\' Ticket\'s scoreboard");
-
-    TicketModel* model = new TicketModel(&app);
-    QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("ticketsModel", model);
-    engine.load(QUrl(QStringLiteral("qrc:/views/ticketsView.qml")));
-    if (engine.rootObjects().isEmpty()) {
-        return -1;
+      if (window.isValid()) {
+        const int FLAG_KEEP_SCREEN_ON = 128;
+        if (on) {
+          window.callMethod<void>("addFlags", "(I)V", FLAG_KEEP_SCREEN_ON);
+        } else {
+          window.callMethod<void>("clearFlags", "(I)V", FLAG_KEEP_SCREEN_ON);
+        }
+      }
     }
+    QAndroidJniEnvironment env;
+    if (env->ExceptionCheck()) {
+      env->ExceptionClear();
+    }
+  });
+}
+#endif
 
-    TicketsPlayer* player = new TicketsPlayer(&app);
-    TicketProcessor* processor = new TicketProcessor(&app);
-    QObject::connect(
-                processor,
-                &TicketProcessor::receivedTicket,
-                &app,
-                [=] (const Ticket& ticket)
-                {
-                    player->addTicketToPlaylist(ticket);
-                    model->addTicket(ticket);
-                });
-    QTimer* timer = new QTimer(&app);
-    QObject::connect(
-                timer,
-                &QTimer::timeout,
-                &app,
-                [=] ()
-                {
-                    if (player->state() == QMediaPlayer::State::StoppedState) {
-                        processor->sendGetTicketRequest();
-                    }
-                });
-    timer->start(5000);
+using namespace std;
 
-    return app.exec();
+int main(int argc, char* argv[]) {
+  QGuiApplication app(argc, argv);
+  QGuiApplication::setOrganizationName(R"(MANO 'MDC')");
+  QGuiApplication::setApplicationName(R"(Mano 'MDC' Ticket's scoreboard)");
+
+#ifdef Q_OS_ANDROID
+  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+  keep_screen_on(true);
+#endif
+
+  auto& settings = AppSettings::getInstance();
+  auto* model = new TicketModel(&app, settings.getMaxRows());
+  QObject::connect(&settings, SIGNAL(maxRowSettingChanged(int)), model,
+                   SLOT(changeMaxTicket(int)));
+  QQmlApplicationEngine engine;
+  engine.rootContext()->setContextProperty("ticketsModel", model);
+  engine.rootContext()->setContextProperty("appSettings", &settings);
+
+  engine.load(QUrl(QStringLiteral("qrc:/views/ticketsView.qml")));
+  if (engine.rootObjects().isEmpty()) {
+    return -1;
+  }
+
+  auto* player = new TicketsPlayer(&app);
+  auto* processor = new TicketProcessor(&app);
+  QObject::connect(processor, &TicketProcessor::receivedTicket, &app,
+                   [=](const Ticket& ticket) {
+                     player->addTicketToPlaylist(ticket);
+                     model->addTicket(ticket);
+                   });
+  auto* processingTimer = new QTimer(&app);
+  processingTimer->setInterval(5000);
+  QObject::connect(processingTimer, &QTimer::timeout, &app, [=]() {
+    if (player->state() == QMediaPlayer::State::StoppedState) {
+      processor->sendGetTicketRequest();
+    }
+  });
+  QObject::connect(&settings, &AppSettings::connectionSettingsChanged, &app,
+                   [=]() {
+                     processingTimer->stop();
+                     processor->login();
+                   });
+  auto* loginTimer = new QTimer(&app);
+  QObject::connect(processor, &TicketProcessor::loginSuccess, [=]() {
+    loginTimer->stop();
+    processingTimer->start();
+  });
+  QObject::connect(processor, SIGNAL(needLogin(int)), loginTimer,
+                   SLOT(start(int)));
+  QObject::connect(loginTimer, SIGNAL(timeout()), processor, SLOT(login()));
+  processor->login();
+
+  return app.exec();
 }

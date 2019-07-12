@@ -4,5 +4,6 @@
     </qresource>
     <qresource lang="ru" prefix="/img">
         <file>mdcLogo.svg</file>
+        <file>menu.png</file>
     </qresource>
 </RCC>

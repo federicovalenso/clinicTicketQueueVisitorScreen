@@ -1,7 +1,8 @@
+import QtGraphicalEffects 1.12
 import QtQuick 2.11
+import QtQuick.Controls 2.5
+import QtQuick.Layouts 1.12
 import QtQuick.Window 2.11
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
 
 Window {
     id: ticketsWindow
@@ -74,9 +75,11 @@ Window {
 
     Component {
         id: lwHeader
+
         Row {
+            id: headerRow
             width: parent.width
-            height: ticketsWindow.height / 5
+            height: lwTickets.delegateHeight
             Rectangle {
                 width: parent.width / 2
                 height: parent.height
@@ -88,11 +91,16 @@ Window {
                     source: "qrc:///img/mdcLogo.svg"
                 }
                 Text {
-                    anchors.centerIn: parent;
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    height: parent.height
+                    width: parent.width
                     color: "Orange";
                     text: qsTr("Талон");
-                    font.bold: true;
-                    font.pointSize: 72
+                    font.bold: true
+                    minimumPointSize: 24.0
+                    font.pointSize: 120.0
+                    fontSizeMode: Text.VerticalFit
                 }
             }
             Rectangle {
@@ -100,11 +108,16 @@ Window {
                 height: parent.height
                 color: "black"
                 Text {
-                    anchors.centerIn: parent;
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    height: parent.height
+                    width: parent.width
                     color: "Orange";
                     text: qsTr("Окно");
-                    font.bold: true;
-                    font.pointSize: 72
+                    font.bold: true
+                    minimumPointSize: 24.0
+                    font.pointSize: 120.0
+                    fontSizeMode: Text.VerticalFit
                 }
             }
         }
@@ -112,10 +125,11 @@ Window {
 
     Component {
         id: lwDelegate
-        Rectangle {
+        Row {
+            spacing: 0
             width: parent.width
-            height: ticketsWindow.height / 5
-            color: {
+            height: lwTickets.delegateHeight
+            property color color: {
                 return (index % 2) == 0 ? "#34ace0" : "#33d9b2"
             }
             Rectangle {
@@ -123,11 +137,14 @@ Window {
                 width: parent.width / 2
                 height: parent.height
                 color: parent.color
-                anchors.left: parent.left
                 Text {
                     text: number
+                    verticalAlignment: Text.AlignVCenter
+                    height: parent.height
                     font.bold: true
-                    font.pointSize: 72.0
+                    minimumPointSize: 24.0
+                    font.pointSize: 120.0
+                    fontSizeMode: Text.Fit
                     anchors.centerIn: parent
                 }
             }
@@ -135,11 +152,14 @@ Window {
                 width: parent.width / 2
                 height: parent.height
                 color: parent.color
-                anchors.left: numberRect.right
                 Text {
                     text: window
+                    verticalAlignment: Text.AlignVCenter
+                    height: parent.height
                     font.bold: true
-                    font.pointSize: 72.0
+                    minimumPointSize: 24.0
+                    font.pointSize: 120.0
+                    fontSizeMode: Text.Fit
                     anchors.centerIn: parent
                 }
             }
@@ -159,6 +179,184 @@ Window {
         removeDisplaced: displacedTransition
         readonly property color oddColor: "#33d9b2"
         readonly property color evenColor: "#34ace0"
+
+        function calcHeightFromCount(delegatesCount) {
+            return height / (parseFloat(delegatesCount) + 1)
+        }
+        property double delegateHeight: calcHeightFromCount(ticketsModel.getMaxTicketsCount())
+
+        Connections {
+            target: ticketsModel
+            onMaxTicketChanged: {
+                lwTickets.delegateHeight = lwTickets.calcHeightFromCount(number)
+            }
+        }
+    }
+
+    Rectangle {
+        id: menuField
+        color: "transparent"
+        width: menu.width
+        height: menu.height
+        anchors.right: parent.right
+        focus:  true
+        activeFocusOnTab: true
+        KeyNavigation.down: serverName
+        KeyNavigation.tab: serverName
+
+        Image {
+            id: menu
+            source: "qrc:///img/menu.png"
+            anchors {
+                right: parent.right
+                top: parent.top
+            }
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: settings.open()
+        }
+
+        ColorOverlay {
+            anchors.fill: menu
+            source: menu
+            color: menuField.activeFocus ? "orange" : "transparent"
+        }
+        Keys.onReturnPressed: settings.open()
+        Keys.onEnterPressed: settings.open()
+    }
+
+    Dialog {
+        id: settings
+        anchors.centerIn: parent
+        modal: true
+        title: qsTr("Редактирование настроек")
+        palette.base: "#eff4ff"
+        palette.text: "black"
+        palette.window: "#603cba"
+        palette.button: "#00aba9"
+        font.pointSize: 12
+        footer: settingButtons
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        KeyNavigation.down: serverName;
+
+        Component.onCompleted: {
+            serverName.text = appSettings.getServerName()
+            port.text = appSettings.getPort()
+            userName.text = appSettings.getUserName()
+            password.text = appSettings.getPassword()
+            maxRows.text = appSettings.getMaxRows()
+        }
+
+
+        function setSettings() {
+            appSettings.setSettings(
+                        serverName.text,
+                        port.text,
+                        userName.text,
+                        password.text,
+                        maxRows.text
+                        )
+            menuField.focus = true
+        }
+
+        onAccepted: setSettings()
+
+        onRejected: menuField.focus = true
+
+        ColumnLayout {
+            width: parent.width
+            height: parent.height
+
+            GridLayout {
+                columns: 2;
+                width: parent.width
+                columnSpacing: 10
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+
+                Label {
+                    text: qsTr("Имя сервера")
+                    color: "#eff4ff"
+                    font.bold: true
+                }
+                TextField {
+                    id: serverName;
+                    KeyNavigation.up: cancelBtn;
+                    KeyNavigation.down: port;
+                }
+                Label {
+                    text: qsTr("Порт")
+                    color: "#eff4ff"
+                    font.bold: true
+                }
+                TextField {
+                    id: port
+                    KeyNavigation.down: userName;
+                    validator : RegExpValidator { regExp : /[0-9]+\.[0-9]+/ }
+                }
+                Label {
+                    text: qsTr("Пользователь")
+                    color: "#eff4ff"
+                    font.bold: true
+                }
+                TextField {
+                    id: userName
+                    KeyNavigation.down: password;
+                }
+                Label {
+                    text: qsTr("Пароль")
+                    color: "#eff4ff"
+                    font.bold: true
+                }
+                TextField {
+                    id: password
+                    KeyNavigation.down: maxRows
+                    echoMode: TextInput.Password
+                }
+                Label {
+                    text: qsTr("Талонов на экране (макс.)")
+                    color: "#eff4ff"
+                    font.bold: true
+                }
+                TextField {
+                    id: maxRows
+                    KeyNavigation.down: saveBtn;
+                    validator : RegExpValidator { regExp : /[1-9]/ }
+                }
+            }
+
+            DialogButtonBox {
+                id: settingButtons
+                Button {
+                    id: saveBtn
+                    text: qsTr("Сохранить")
+                    DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+                    KeyNavigation.right: cancelBtn
+                    KeyNavigation.down: serverName
+                    Keys.onPressed: {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            settings.setSettings()
+                            settings.close()
+                            menuField.focus = true
+                        }
+                    }
+                }
+
+                Button {
+                    id: cancelBtn
+                    text: qsTr("Отмена")
+                    DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+                    KeyNavigation.up: maxRows
+                    KeyNavigation.down: serverName
+                    Keys.onPressed: {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            settings.close()
+                            menuField.focus = true
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
