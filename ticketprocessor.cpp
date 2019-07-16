@@ -126,7 +126,6 @@ QNetworkCookie TicketProcessor::getCookie(const QNetworkReply &reply) {
 
 void TicketProcessor::replyFinished(QNetworkReply *reply) {
   auto error = reply->error();
-  qDebug() << reply->url();
   if (error != QNetworkReply::NetworkError::NoError) {
     qWarning() << reply->error();
     if (error == QNetworkReply::NetworkError::ContentAccessDenied) {

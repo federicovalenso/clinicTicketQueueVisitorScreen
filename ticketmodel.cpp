@@ -95,11 +95,11 @@ int TicketModel::getMaxTicketsCount() const { return max_tickets_; }
 void TicketModel::changeMaxTicket(int max_tickets) {
   max_tickets_ = max_tickets;
   QMutexLocker locker(&mutex_);
+  emit maxTicketChanged(max_tickets);
   int diff = data_.size() - max_tickets;
   if (diff > 0) {
     removeRows(0, diff);
   }
-  emit maxTicketChanged(max_tickets);
 }
 
 void TicketModel::addRow(const Ticket &ticket) {
