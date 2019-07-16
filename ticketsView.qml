@@ -77,8 +77,7 @@ Window {
         id: lwHeader
 
         Row {
-            id: headerRow
-            width: parent.width
+            width: lwTickets.width
             height: lwTickets.delegateHeight
             Rectangle {
                 width: parent.width / 2
@@ -127,18 +126,18 @@ Window {
         id: lwDelegate
         Row {
             spacing: 0
-            width: parent.width
+            width: lwTickets.width
             height: lwTickets.delegateHeight
             property color color: {
                 return (index % 2) == 0 ? "#34ace0" : "#33d9b2"
             }
             Rectangle {
-                id: numberRect
                 width: parent.width / 2
                 height: parent.height
                 color: parent.color
                 Text {
                     text: number
+                    horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     height: parent.height
                     font.bold: true
@@ -154,6 +153,7 @@ Window {
                 color: parent.color
                 Text {
                     text: window
+                    horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     height: parent.height
                     font.bold: true
@@ -189,6 +189,7 @@ Window {
             target: ticketsModel
             onMaxTicketChanged: {
                 lwTickets.delegateHeight = lwTickets.calcHeightFromCount(number)
+                lwTickets.forceLayout()
             }
         }
     }
