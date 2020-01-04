@@ -1,7 +1,7 @@
 QT += core gui multimedia quick svg
 
 QMAKE_CXXFLAGS += -O2
-CONFIG += c++11
+CONFIG += c++1z
 TARGET = TicketVoice
 
 TEMPLATE = app
