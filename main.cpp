@@ -85,6 +85,7 @@ int main(int argc, char* argv[]) {
                      processingTimer->stop();
                      processor->login();
                    });
+
   auto* loginTimer = new QTimer(&app);
   QObject::connect(processor, &TicketProcessor::loginSuccess, [=]() {
     loginTimer->stop();
@@ -94,6 +95,11 @@ int main(int argc, char* argv[]) {
                    SLOT(start(int)));
   QObject::connect(loginTimer, SIGNAL(timeout()), processor, SLOT(login()));
   processor->login();
+
+  auto* cleanerTimer = new QTimer(&app);
+  QObject::connect(cleanerTimer, SIGNAL(timeout()), model,
+                   SLOT(deleteOldestTicket()));
+  cleanerTimer->start(10'000);
 
   return app.exec();
 }
