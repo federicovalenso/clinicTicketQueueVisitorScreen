@@ -29,19 +29,19 @@ class TicketProcessor : public QObject {
   void replyFinished(QNetworkReply* reply);
 
  private:
-  static const QString ACTION_TICKETS;
-  static const QString ACTION_VOICE_TICKETS;
-  static const QString ACTION_TICKETS_FREE;
-  static const QString ACTION_LOGIN;
-  static const QString ACTION_LOGIN_PATH;
-  static const QString ID;
-  static const QString TICKET_NUMBER;
-  static const QString WINDOW_NUMBER;
-  static const QString IS_VOICED;
-  static const QString NAME_PARAM;
-  static const QString PASSWORD_PARAM;
-  static const QByteArray SET_COOKIE_HEADER;
-  static const QByteArray SESSION_ID;
+  static const QString kActionTickets;
+  static const QString kActionVoiceTickets;
+  static const QString kActionFreeTickets;
+  static const QString kActionLogin;
+  static const QString kActionLoginPath;
+  static const QString kId;
+  static const QString kTicketNumber;
+  static const QString kWindow;
+  static const QString kIsVoiced;
+  static const QString kNameParam;
+  static const QString kPasswordParam;
+  static const QByteArray kSetCookieHeader;
+  static const QByteArray kSessionId;
 
   QNetworkAccessManager* mNetworkManager;
 
@@ -54,7 +54,7 @@ class TicketProcessor : public QObject {
       noexcept;
   void sendVoiceTicketRequest(const Ticket& ticket) const noexcept;
   QNetworkCookie getCookie(const QNetworkReply& reply);
-  Ticket parseTicket(const QByteArray&);
+  std::optional<Ticket> parseTicket(const QByteArray&);
 };
 
 #endif  // TICKETPROCESSOR_H

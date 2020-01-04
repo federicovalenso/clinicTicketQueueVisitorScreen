@@ -5,20 +5,20 @@
 #include <QNetworkCookieJar>
 #include "appsettings.h"
 
-const QString TicketProcessor::ACTION_TICKETS = "tickets";
-const QString TicketProcessor::ACTION_VOICE_TICKETS = "api/tickets";
-const QString TicketProcessor::ACTION_TICKETS_FREE = "tickets/free";
-const QString TicketProcessor::ACTION_LOGIN = "login";
-const QString TicketProcessor::ACTION_LOGIN_PATH =
-    "/" + TicketProcessor::ACTION_LOGIN;
-const QString TicketProcessor::ID = "id";
-const QString TicketProcessor::TICKET_NUMBER = "ticket_number";
-const QString TicketProcessor::WINDOW_NUMBER = "window_number";
-const QString TicketProcessor::IS_VOICED = "is_voiced";
-const QString TicketProcessor::NAME_PARAM = "name";
-const QString TicketProcessor::PASSWORD_PARAM = "password";
-const QByteArray TicketProcessor::SET_COOKIE_HEADER = "Set-Cookie";
-const QByteArray TicketProcessor::SESSION_ID = "sessionid";
+const QString TicketProcessor::kActionTickets = "tickets";
+const QString TicketProcessor::kActionVoiceTickets = "api/ticket/voice";
+const QString TicketProcessor::kActionFreeTickets = "api/tickets/free";
+const QString TicketProcessor::kActionLogin = "login";
+const QString TicketProcessor::kActionLoginPath =
+    "/" + TicketProcessor::kActionLogin;
+const QString TicketProcessor::kId = "id";
+const QString TicketProcessor::kTicketNumber = "ticket_number";
+const QString TicketProcessor::kWindow = "window";
+const QString TicketProcessor::kIsVoiced = "is_voiced";
+const QString TicketProcessor::kNameParam = "name";
+const QString TicketProcessor::kPasswordParam = "password";
+const QByteArray TicketProcessor::kSetCookieHeader = "Set-Cookie";
+const QByteArray TicketProcessor::kSessionId = "sessionid";
 
 TicketProcessor::TicketProcessor(QObject *parent) : QObject(parent) {
   mNetworkManager = new QNetworkAccessManager(this);
@@ -29,13 +29,13 @@ TicketProcessor::TicketProcessor(QObject *parent) : QObject(parent) {
 void TicketProcessor::sendLoginRequest(const QString &name,
                                        const QString &password) const noexcept {
   QUrlQuery params;
-  params.addQueryItem(NAME_PARAM, name);
-  params.addQueryItem(PASSWORD_PARAM, password);
-  sendPostRequest(params, ACTION_LOGIN);
+  params.addQueryItem(kNameParam, name);
+  params.addQueryItem(kPasswordParam, password);
+  sendPostRequest(params, kActionLogin);
 }
 
 void TicketProcessor::sendGetTicketRequest() const noexcept {
-  sendGetRequest(ACTION_TICKETS_FREE);
+  sendGetRequest(kActionFreeTickets);
 }
 
 void TicketProcessor::login() {
@@ -86,35 +86,36 @@ void TicketProcessor::sendPutRequest(const QUrlQuery &params,
 void TicketProcessor::sendVoiceTicketRequest(const Ticket &ticket) const
     noexcept {
   QUrlQuery params;
-  params.addQueryItem(ID, QString::number(ticket.id));
-  params.addQueryItem(IS_VOICED, QString::number(1));
-  sendPutRequest(params, ACTION_VOICE_TICKETS);
+  params.addQueryItem(kId, QString::number(ticket.id));
+  params.addQueryItem(kIsVoiced, QString::number(1));
+  sendPutRequest(params, kActionVoiceTickets);
 }
 
-Ticket TicketProcessor::parseTicket(const QByteArray &data) {
+std::optional<Ticket> TicketProcessor::parseTicket(const QByteArray &data) {
   QJsonDocument jsonDoc(QJsonDocument::fromJson(data));
   Ticket result;
   if (jsonDoc.isObject()) {
     QJsonObject jsonObj(jsonDoc.object());
-    if (jsonObj.contains(ID) && jsonObj.contains(TICKET_NUMBER) &&
-        jsonObj.contains(WINDOW_NUMBER)) {
-      result.id = jsonObj.value(ID).toInt();
-      result.ticket_number = jsonObj.value(TICKET_NUMBER).toString();
-      result.window = jsonObj.value(WINDOW_NUMBER).toInt();
+    if (jsonObj.contains(kId) && jsonObj.contains(kTicketNumber) &&
+        jsonObj.contains(kWindow)) {
+      result.id = jsonObj.value(kId).toInt();
+      result.ticket_number = jsonObj.value(kTicketNumber).toString();
+      result.window = jsonObj.value(kWindow).toInt();
+      return result;
     }
   }
-  return result;
+  return std::nullopt;
 }
 
 QNetworkCookie TicketProcessor::getCookie(const QNetworkReply &reply) {
   QNetworkCookie result;
-  if (reply.hasRawHeader(SET_COOKIE_HEADER)) {
-    auto cookie_header = reply.rawHeader(SET_COOKIE_HEADER);
+  if (reply.hasRawHeader(kSetCookieHeader)) {
+    auto cookie_header = reply.rawHeader(kSetCookieHeader);
     auto cookie_parts = cookie_header.split(';');
     for (const auto &part : cookie_parts) {
       auto params = part.split('=');
       if (params.size() == 2) {
-        if (params.first() == SESSION_ID) {
+        if (params.first() == kSessionId) {
           result.setName(params.first());
           result.setValue(params.last());
         }
@@ -137,15 +138,15 @@ void TicketProcessor::replyFinished(QNetworkReply *reply) {
     if (status == 200) {
       QNetworkAccessManager::Operation operation = reply->operation();
       if (operation == QNetworkAccessManager::GetOperation) {
-        Ticket ticket(parseTicket(reply->readAll()));
-        if (ticket.isValid()) {
-          emit receivedTicket(ticket);
-          sendVoiceTicketRequest(ticket);
+        const auto ticket(parseTicket(reply->readAll()));
+        if (ticket) {
+          emit receivedTicket(*ticket);
+          sendVoiceTicketRequest(*ticket);
         } else {
           emit requestError(tr("Отсутствуют неозвученные талоны"));
         }
       } else if (operation == QNetworkAccessManager::PostOperation) {
-        if (reply->url().path() == ACTION_LOGIN_PATH) {
+        if (reply->url().path() == kActionLoginPath) {
           auto cookie = getCookie(*reply);
           if (!cookie.value().isEmpty()) {
             reply->manager()->cookieJar()->insertCookie(cookie);
