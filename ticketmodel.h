@@ -36,6 +36,7 @@ class TicketModel : public QAbstractTableModel {
 
  public slots:
   void changeMaxTicket(int max_tickets);
+  void deleteOldestTicket();
 
  private:
   std::atomic<int> max_tickets_;

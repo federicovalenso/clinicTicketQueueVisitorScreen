@@ -3,6 +3,7 @@
 #include <QMutexLocker>
 #include <algorithm>
 #include <utility>
+#include "appsettings.h"
 
 #include <QDebug>
 
@@ -99,6 +100,20 @@ void TicketModel::changeMaxTicket(int max_tickets) {
   int diff = data_.size() - max_tickets;
   if (diff > 0) {
     removeRows(0, diff);
+  }
+}
+
+void TicketModel::deleteOldestTicket() {
+  using namespace std::chrono;
+  QMutexLocker locker(&mutex_);
+  auto now = steady_clock::now();
+  for (const auto &ticket : data_) {
+    auto time_diff = duration_cast<milliseconds>(now - ticket.created_at);
+    if (time_diff > AppSettings::kCleanInterval) {
+      removeRows();
+    } else {
+      break;
+    }
   }
 }
 

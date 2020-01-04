@@ -4,11 +4,13 @@
 #include <QByteArray>
 #include <QSettings>
 #include <QString>
+#include <chrono>
 
 class AppSettings : public QSettings {
   Q_OBJECT
  public:
   static AppSettings& getInstance();
+  static constexpr std::chrono::milliseconds kCleanInterval{180'000};
 
   AppSettings(const AppSettings&) = delete;
   AppSettings(AppSettings&&) = delete;
