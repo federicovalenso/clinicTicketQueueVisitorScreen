@@ -51,5 +51,11 @@
         <file alias="э">sounds/he.mp3</file>
         <file alias="ю">sounds/yu.mp3</file>
         <file alias="я">sounds/ya.mp3</file>
+        <file alias="200">sounds/200.mp3</file>
+        <file alias="300">sounds/300.mp3</file>
+        <file alias="400">sounds/400.mp3</file>
+        <file alias="500">sounds/500.mp3</file>
+        <file alias="600">sounds/600.mp3</file>
+        <file alias="700">sounds/700.mp3</file>
     </qresource>
 </RCC>
